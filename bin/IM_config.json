@@ -1,0 +1,142 @@
+{	
+	"memcmp_match"	:{
+						"Sina_Web_WeiBo"		:{
+									 				"host"		:	"weibo.com",
+									 				"url"		:	"/aj/mblog/add?",
+									 				"reg"		:	".*&text=([^&]*)"
+													},
+						"Sina_Web_WeiBo_mail"	:{			 	
+													"host"		:	"weibo.com",
+									 				"url"		:	"/aj/message/add?",
+									 				"reg"		:	".*&text=([^&]*)"
+													},
+						"Sina_Web_Cblog"    	:{
+						    		 				"host"		:	"c.blog.sina.com.cn",
+									 				"url"		:	"/cblog_photo.php",
+									 				"reg"		:	"(.+)&&photo="
+									 				},
+						"Sina_Web_Cblog_1"		:{	
+						 			 				"host"		:	"weibo.com",
+						 			 				"url"		: 	"/aj/article/create?",
+						 			 				"reg"		:	"(title=.+&content=[^&]*)"								
+						 			 				},
+						"Sina_Desk_WeiBo"		:{
+													"host"		:	"api.weibo.com",
+													"url" 		:	"/2/statuses/update.json",
+													"reg" 		:	"status=([\\s\\S]*)"
+													},
+						"Sina_Desk_Comments"	:{
+													"host"		:	"api.weibo.com",
+													"url" 		:	"/2/comments/create.json",
+													"reg" 		:	".+&comment=(.+)"
+													},
+						"Sina_Desk_Reply"		:{	
+													"host"		:	"api.weibo.com",
+													"url" 		:	"/2/comments/reply.json",
+													"reg" 		:	".+&comment=(.+)"
+													},
+						"Qzone_ShuoShuo"		:{
+													"host" 		:	"user.qzone.qq.com",
+													"url" 		:	"/q/taotao/cgi-bin/emotion_cgi_publish_v6",
+													"reg" 		:	".*&con=([^&]*)"
+													},
+						"Qzone_ShuoShuo_1"		:{
+													"host" 		:	"rc.qzone.qq.com",
+													"url" 		:	"/q/taotao/cgi-bin/emotion_cgi_publish_v6",
+													"reg" 		:	".*&con=([^&]*)"
+													},
+						
+						"Qzone_log"				:{							
+													"host" 		:	"b11.qzone.qq.com",
+													"url" 		:	"/cgi-bin/blognew/add_blog",
+													"reg" 		:	"^qzreferrer=.+&(title=.+)&source=.+"
+													},
+						"Qzone_Plog"			:{
+													"host" 		:	"b11.qzone.qq.com",							
+													"url" 		:	"/cgi-bin/privateblog/privateblog_add",
+													"reg"		:	"^qzreferrer=.+&(title=.+)&tweetflag=.+"
+													},
+						"QQ_WeiBo"				:{
+													"host" 		:	"api.t.qq.com",
+													"url" 		:	"/old/publish",
+													"reg" 		:	"^content=([^&]*)"
+													},
+						"QQ_WeiBo_Pmail"		:{
+													"host" 		:	"api.t.qq.com",					
+													"url" 		:	"/inbox/pm_mgr",
+													"reg" 		:	".*&content=([^&]*)"
+													},
+						"Mop_ChuanHu"	   		:{
+									 				"host" 		:	"hi.mop.com",
+									 				"url"		: 	"/msg/send-chat?",
+									 				"reg"		: 	"^content=(.+?)&date=.+"
+									 				},
+						"Mop_Heart"			 	:{			
+									 				"host" 		:	"hi.mop.com",
+						             				"url"		:	"/space/mood/add",
+						             				"reg"		:	"^content=(.+?)&date=.+"
+						             				},
+						"mop_tie"             	:{			
+						             				"host" 		:	"dzh.mop.com",
+													"url" 		:	"/ajax/audit/subject-add",
+													"reg" 		:	"(.+)&date=.*"							
+													},
+						"WangYi_WeiBo"			:{
+													"host" 		:	"t.163.com",
+													"url" 		:	"/tweet.do?action=addTweet",
+													"reg" 		:	"^content=(.+)&isRetweet=.+"
+													},
+						"WangYi_Pmail"			:{												
+													"host" 		:	"t.163.com",
+													"url" 		:	"/message.do?action=sendMessage",
+													"reg" 		:	"^nickName=.+&content=(.+)"
+													},
+						"TianYa_Blog"			:{
+													"host"		:	"blog.tianya.cn",
+													"url" 		:	"/api/blog?method=blog.ice.insertBlogArticle",
+													"reg" 		:	".*&params.(title=.*&params.content=.*)&params.keyWord=.*"
+													},
+						"TianYa_BBS"			:{														
+													"host" 		:	"bbs.tianya.cn",
+													"url" 		:	"/api?method=bbs.ice.compose",
+													"reg" 		:	".*&params.(title=.*&params.content=.*)&params.action=.*"
+														},
+						"TianYa_SuiJi"			:{								
+													"host" 		:	"www.tianya.cn",
+													"url" 		:	"/api/tw?method=tweet.ice.insert",
+													"reg" 		:	".*&params.(title=.*&params.body=.*)"
+													},
+						"TianYa_Mail"			:{
+													"host" 		:	"www.tianya.cn",
+													"url" 		:	"/api/msg?method=messageuser.insertmessageforweb",
+													"reg" 		:	".*(UserName=.+?&params.content=.+?)&params.behavior.+"
+													},
+						"BaiDu_TieBa_1"			:{
+													"host" 		:	"tieba.baidu.com",
+													"url" 		:	"/f/commit/thread/add",
+													"reg" 		:	"&(content=.+?)&prefix=.+"
+													},
+						"BaiDu_TieBa_2"			:{
+													"host" 		:	"tieba.baidu.com",
+													"url" 		:	"/f/commit/post/add",
+													"reg" 		:	"&content=([^&]*)"
+													},
+						"BaiDu_TieBa_msg"		:{						
+													"host" 		:	"msg.baidu.com",
+													"url" 		:	"/msg/writing/submit/msg",
+													"reg" 		:	"msgcontent=([^&]*)"
+													},
+						"RenRen_log"			:{
+													"host"		:	"blog.renren.com",
+													"url" 		:	"/NewEntry.do",
+													"reg" 		:	"(^title=.+&body=.+)&privacyParams=.+"
+													}								
+						},
+	"pcre_match"	:{
+						"RenRen_Status"			:{	
+													"host"		:	"shell.renren.com",
+													"url"		:	"^/\\d+/status",
+													"reg"		:	"^content=(.+)&hostid=.+"
+													}
+						}									
+}	
