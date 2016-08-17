@@ -628,7 +628,7 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
         }
         if (req->pstrblock_read_len == 0)
             return CI_NEEDS_MORE;
-    }
+    } // end of while 1
 
     return CI_OK;
 }

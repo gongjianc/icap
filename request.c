@@ -1206,11 +1206,9 @@ static int get_send_body(ci_request_t * req, int parse_only)
                     req->pstrblock_responce = rchunkdata;  /*does not needed! */
                     rchunkisfull = 0;
                 }
-                if ((MAX_CHUNK_SIZE - req->remain_send_block_bytes) > 0
-                        && has_formated_data == 0) {
+                if ((MAX_CHUNK_SIZE - req->remain_send_block_bytes) > 0 && has_formated_data == 0) {
                     rbytes = MAX_CHUNK_SIZE - req->remain_send_block_bytes;
-                }
-                else {
+                }else {
                     rchunkisfull = 1;
                     rbytes = 0;
                 }
@@ -1220,9 +1218,7 @@ static int get_send_body(ci_request_t * req, int parse_only)
 
             no_io = 0;
             //  ci_debug_printf(9, "get send body: going to write/read: %d/%d bytes\n", wbytes, rbytes);//by niulw mask
-            if ((*service_io)
-                    (rchunkdata, &rbytes, wchunkdata, &wbytes, req->eof_received,
-                     req) == CI_ERROR)
+            if ((*service_io)(rchunkdata, &rbytes, wchunkdata, &wbytes, req->eof_received, req) == CI_ERROR)
                 return CI_ERROR;
             //  ci_debug_printf(9, "get send body: written/read: %d/%d bytes (eof: %d)\n", wbytes, rbytes, req->eof_received);
             no_io = (rbytes==0 && wbytes==0);
