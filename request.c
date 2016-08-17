@@ -431,13 +431,12 @@ static int ci_read_icap_header(ci_request_t * req, ci_headers_list_t * h, int ti
 }
 
 /*size 是 req->entities[i + 1]->start - e->start;*/
-//size应该是实际http头的真实大小
+//size是http头的真实大小
 static int read_encaps_header(ci_request_t * req, ci_headers_list_t * h, int size)
 {
     int bytes = 0, remains, readed = 0;
     char *buf_end = NULL;
 
-    //此处传来的h 是req->entities[i].entity 是ci_headers_list_t, 所以需要设置size
     if (!ci_headers_setsize(h, size + (CHECK_FOR_BUGGY_CLIENT != 0 ? 2 : 0)))
         return EC_500;
     buf_end = h->buf; //
@@ -448,13 +447,12 @@ static int read_encaps_header(ci_request_t * req, ci_headers_list_t * h, int siz
 
         //这个就是读取的http头
         memcpy(h->buf, req->pstrblock_read, readed);
-        buf_end = h->buf + readed; //这里应该到最后了？
+        buf_end = h->buf + readed; 
 
         if (size <= req->pstrblock_read_len) {        /*We have readed all this header....... */
             req->pstrblock_read = (req->pstrblock_read) + readed;
             req->pstrblock_read_len = (req->pstrblock_read_len) - readed;
-        }
-        else {
+        }else {
             req->pstrblock_read = NULL;
             req->pstrblock_read_len = 0;
         }
@@ -473,6 +471,7 @@ static int read_encaps_header(ci_request_t * req, ci_headers_list_t * h, int siz
         req->bytes_in += bytes;
     }
 
+    //h is req->entities[0]->entity
     h->bufused = buf_end - h->buf;     // -1 ;
     if (strncmp(buf_end - 4, "\r\n\r\n", 4) == 0) {
         h->bufused -= 2;      /*eat the last 2 bytes of "\r\n\r\n" */
@@ -510,7 +509,7 @@ static int get_method(char *buf, char **end)
     }
 }
 
-// buf h->header[0]
+// buf is h->header[0]
 static int parse_request(ci_request_t * req, char *buf)
 {
     char *start, *end;
@@ -686,11 +685,11 @@ static int parse_header(ci_request_t * req)
     if ((request_status = ci_headers_unpack(h)) != EC_100)
         return request_status;
 
-    //h->headers[0] = h->buf
+    //h->headers[0] is the first line of request with '\0' end .by jayg
     if ((request_status = parse_request(req, h->headers[0])) != EC_100)
         return request_status;
 
-    //h->used在ci_headers_unpack中设置，值为h->headers中的指针个数 
+    //h->used在ci_headers_unpack中设置，值为h->headers中的头个数 
     //request_status是EC_100
     for (i = 1; i < h->used && request_status == EC_100; i++) {
         if (strncasecmp("Preview:", h->headers[i], 8) == 0) {
@@ -713,20 +712,17 @@ static int parse_header(ci_request_t * req)
                    return ci_buf_mem_alloc(buf, req_size);
                    } */
             }
-        }
-        else if (strncasecmp("Encapsulated:", h->headers[i], 13) == 0){
+        }else if (strncasecmp("Encapsulated:", h->headers[i], 13) == 0){
             /* ci_debug_printf(9, "\033[0;35m=============Encapsulated, i is %d============\n\033[0m", i); */
             request_status = process_encapsulated(req, h->headers[i]);
-        }
-        else if (strncasecmp("Connection:", h->headers[i], 11) == 0) {
+        }else if (strncasecmp("Connection:", h->headers[i], 11) == 0) {
             val = h->headers[i] + 11;
             for (;isspace(*val) && *val != '\0'; ++val);
             /*             if(strncasecmp(val,"keep-alive",10)==0)*/
             if (strncasecmp(val, "close", 5) == 0)
                 req->keepalive = 0;
             /*else the default behaviour of keepalive ..... */
-        }
-        else if (strncasecmp("Allow:", h->headers[i], 6) == 0) {
+        }else if (strncasecmp("Allow:", h->headers[i], 6) == 0) {
             /* ci_debug_printf(9, "\033[0;35m=============Allow, i is %d============\n\033[0m", i); */
             if (strstr(h->headers[i]+6, "204"))
                 req->allow204 = 1;
@@ -775,6 +771,7 @@ static int read_preview_data(ci_request_t * req)
     int ret;
     char *wdata;
 
+    //init 
     req->current_chunk_len = 0;
     req->chunk_bytes_read = 0;
     req->write_to_module_pending = 0;
@@ -783,8 +780,7 @@ static int read_preview_data(ci_request_t * req)
         if(wait_for_data(req->connection->fd, TIMEOUT, wait_for_read) < 0)
             return CI_ERROR;
 
-        //这里会读吧
-        ci_debug_printf(9, "\033[0;34m============================read_preview_data=============\n\033[0m");//by jayg
+        /* ci_debug_printf(9, "\033[0;34m============================read_preview_data=============\n\033[0m");//by jayg */
         if (net_data_read(req) == CI_ERROR)
             return CI_ERROR;
     }
@@ -1183,8 +1179,9 @@ static int get_send_body(ci_request_t * req, int parse_only)
             has_formated_data = 1;
         else
             has_formated_data = 0;
+
         parse_chunk_ret = 0;
-        do {
+        do{
             if (req->pstrblock_read_len != 0 && req->write_to_module_pending == 0) {
                 if ((parse_chunk_ret = parse_chunk_data(req, &wchunkdata)) == CI_ERROR) {
                     ci_debug_printf(1, "Error parsing chunks!\n");

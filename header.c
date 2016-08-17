@@ -163,8 +163,7 @@ ci_headers_list_t *ci_headers_create()
      }
      h->headers = NULL;
      h->buf = NULL;
-     if (!(h->headers = malloc(HEADERSTARTSIZE * sizeof(char *)))
-         || !(h->buf = malloc(HEADSBUFSIZE * sizeof(char)))) {
+     if (!(h->headers = malloc(HEADERSTARTSIZE * sizeof(char *))) || !(h->buf = malloc(HEADSBUFSIZE * sizeof(char)))) {
           ci_debug_printf(1, "Server Error: Error allocation memory \n");
           if (h->headers)
                free(h->headers);
@@ -503,8 +502,7 @@ int ci_headers_unpack(ci_headers_list_t * h)
           eoh = 0;
 
           if ((*str == '\r' && *(str + 1) == '\n')) {
-               if ((str + 2) >= ebuf
-                   || (*(str + 2) != '\t' && *(str + 2) != ' '))
+               if ((str + 2) >= ebuf || (*(str + 2) != '\t' && *(str + 2) != ' '))
                     eoh = 1;
           }
           else if (*str == '\n' && *(str + 1) != '\t' && *(str + 1) != ' ') {
@@ -520,8 +518,7 @@ int ci_headers_unpack(ci_headers_list_t * h)
                     len = h->size + HEADERSTARTSIZE;
                     newspace = realloc(h->headers, len * sizeof(char *));
                     if (!newspace) {
-                         ci_debug_printf(1,
-                                         "Server Error: Error allocating memory \n");
+                         ci_debug_printf(1, "Server Error: Error allocating memory \n");
                          return EC_500;
                     }
                     h->headers = newspace;
@@ -534,6 +531,10 @@ int ci_headers_unpack(ci_headers_list_t * h)
                h->used++;
           }	  
      }     
+     for(int i = 0; i < h->used; i++){
+         ci_debug_printf(9, "h->headers[%d] is ==============\n%s\n", i, h->headers[i]);
+     }
+     
      h->packed = 0;
      /*OK headers index construction ...... */
      return EC_100;

@@ -280,7 +280,6 @@ ci_request_t *ci_request_alloc(ci_connection_t * connection)
     req->preview_data_type = -1;
     req->auth_required = 0;
 
-
     req->log_str = NULL;
     req->attributes = NULL;
     memset(&(req->xclient_ip), 0, sizeof(ci_ip_t));
@@ -288,6 +287,7 @@ ci_request_t *ci_request_alloc(ci_connection_t * connection)
     req->bytes_in = 0;
     req->bytes_out = 0;
     req->request_bytes_in = 0;
+
     req->http_bytes_in = 0;
     req->http_bytes_out = 0;
     req->body_bytes_in = 0;
@@ -455,6 +455,7 @@ int ci_request_206_origin_body(ci_request_t *req, uint64_t offset)
     return 1;
 }
 
+//buf h->headers[i] which contains the Encapsulated info
 int process_encapsulated(ci_request_t * req, const char *buf)
 {
     const char *start;
@@ -467,8 +468,8 @@ int process_encapsulated(ci_request_t * req, const char *buf)
     end = (char *)start;
     for (;isspace(*pos) && *pos != '\0'; ++pos);
     while (*pos != '\0') {
-        //end是第一个不符合转换请求的位置
-        //var是数值
+        //var是数值，表示包头的大小
+        //将字符串读取为数字，end为读取时第一个不是数字的位置，作为下一次读取的起点位置
         type = get_encaps_type(pos, &val, &end);
         if (type < 0) /*parse error - return "400 bad request"*/
             return EC_400;
@@ -537,6 +538,7 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
                 return CI_ERROR;
             }
             req->current_chunk_len = tmp;
+            ci_debug_printf(9, "req->current_chunk_len is %d\n", req->current_chunk_len);
             req->chunk_bytes_read = 0;
 
             while(*end == ' ' || *end == '\t') ++end; /*ignore spaces*/
@@ -566,8 +568,7 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
                     req->eof_received = 1;
                 }
 
-            }
-            else {
+            }else {
                 read_status = READ_CHUNK_DATA;
                 /*include the \r\n end of chunk data */
                 req->current_chunk_len += 2;
@@ -581,7 +582,7 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
 
             req->pstrblock_read_len -= chunkLen;
             req->pstrblock_read += chunkLen;
-        } // end if READ_CHUNK_DEF
+        } // end of if READ_CHUNK_DEF
 
         if (req->current_chunk_len == 0) /*zero chunk received, stop for now*/
             return CI_EOF;
@@ -603,6 +604,7 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
                 } 
                 else        /*we are in all or part of the \r\n end of chunk data */
                     req->write_to_module_pending = 0;
+
                 req->chunk_bytes_read += remains;
                 req->pstrblock_read += remains;
                 req->pstrblock_read_len -= remains;
@@ -637,18 +639,21 @@ int net_data_read(ci_request_t * req)
 {
     int bytes;
 
+    //rbuf is a array
     if (req->pstrblock_read != req->rbuf) {
         /*... put the current data to the begining of buf .... */
-        if (req->pstrblock_read_len)
+        if (req->pstrblock_read_len){
+            /* ci_debug_printf(9, "===================here 1\n"); */
             memmove(req->rbuf, req->pstrblock_read, req->pstrblock_read_len);
+        }
+
+        /* ci_debug_printf(9, "===================here 2\n"); */
         req->pstrblock_read = req->rbuf;
     }
 
     bytes = BUFSIZE - req->pstrblock_read_len;
     if (bytes <= 0) {
-        ci_debug_printf(5,
-                "Not enough space to read data! Is this a bug (%d %d)?????\n",
-                req->pstrblock_read_len, BUFSIZE);
+        ci_debug_printf(5, "Not enough space to read data! Is this a bug (%d %d)?????\n", req->pstrblock_read_len, BUFSIZE);
         return CI_ERROR;
     }
 
@@ -656,6 +661,7 @@ int net_data_read(ci_request_t * req)
         ci_debug_printf(5, "Error reading data (read return=%d, errno=%d) \n", bytes, errno);
         return CI_ERROR;
     }
+    /* ci_debug_printf(9, "=============================rbuf is \n%s\n", req->rbuf); */
     req->pstrblock_read_len += bytes;  /* ... (size of data is readed plus old )... */
     req->bytes_in += bytes;
     return CI_OK;
