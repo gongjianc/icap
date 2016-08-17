@@ -796,7 +796,7 @@ static int read_preview_data(ci_request_t * req)
             }
             if (ci_buf_write(&(req->preview_data), wdata, req->write_to_module_pending) < 0)
                 return CI_ERROR;
-            req->write_to_module_pending = 0; // mark jayg
+            req->write_to_module_pending = 0; 
 
             if (ret == CI_EOF) {
                 req->pstrblock_read = NULL;
