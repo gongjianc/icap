@@ -192,40 +192,6 @@ static int wait_for_data(ci_socket fd, int secs, int what_wait)
     do {
         //secs = TIMEOUT
         wait_status =ci_wait_for_data(fd, secs, what_wait);
-        /** unix ci_wait_for_data ** 这里是等待poll监听的事件有响应，得到状态
-          int ci_wait_for_data(int fd, int secs, int what_wait)
-          {
-          int ret = 0;
-          struct pollfd fds[1];
-          secs *= 1000; // Should be in milliseconds
-          fds[0].fd = fd;
-          fds[0].events = (what_wait & wait_for_read ? POLLIN : 0) | (what_wait & wait_for_write ? POLLOUT : 0);
-          errno = 0;
-          if ((ret = poll(fds, 1, secs)) > 0) {
-          if (fds[0].revents & (POLLERR | POLLHUP)) {
-          ci_debug_printf(3, "ci_wait_for_data error: the connection is terminated\n");
-          return -1;
-          }
-
-          if (fds[0].revents & (POLLNVAL)) {
-          ci_debug_printf(1, "ci_wait_for_data error: poll on closed socket?\n");
-          return -1;
-          }
-          ret = 0;
-          if (fds[0].revents & POLLIN)
-          ret = wait_for_read;
-          if (fds[0].revents & POLLOUT)
-          ret = ret | wait_for_write;
-          return ret;
-          }
-
-          if (ret < 0 && errno != EINTR) {
-          ci_debug_printf(5, "Fatal error while waiting for new data (errno=%d....\n", errno);
-          return -1;
-          }
-          return 0;
-          }
-         **/
         if (wait_status < 0)
             return CI_ERROR;
         if (wait_status == 0 && CHILD_HALT) /*abort*/
@@ -807,6 +773,7 @@ static int read_preview_data(ci_request_t * req)
             }
         } while (ret != CI_NEEDS_MORE);
 
+        /* if CI_NEEDS_MORE then ... */
         if (wait_for_data(req->connection->fd, TIMEOUT, wait_for_read) < 0)
             return CI_ERROR;
         if (net_data_read(req) == CI_ERROR)
@@ -911,6 +878,7 @@ static int mk_responce_header(ci_request_t * req)
         ci_headers_addheaders(head, req->xheaders);
     }
 
+    //for ICAP_RESPMOD
     e_list = req->entities;
     if (req->type == ICAP_RESPMOD) {
         if (e_list[0]->type == ICAP_REQ_HDR) {
@@ -952,9 +920,7 @@ static int send_current_block_data(ci_request_t * req)
     int bytes;
     if (req->remain_send_block_bytes == 0)
         return 0;
-    if ((bytes =
-                ci_write_nonblock(req->connection->fd, req->pstrblock_responce,
-                    req->remain_send_block_bytes)) < 0) {
+    if ((bytes = ci_write_nonblock(req->connection->fd, req->pstrblock_responce, req->remain_send_block_bytes)) < 0) {
         ci_debug_printf(5, "Error writing to socket (errno:%d, bytes:%d. string:\"%s\")", errno, req->remain_send_block_bytes, req->pstrblock_responce);
         return CI_ERROR;
     }
@@ -1052,10 +1018,25 @@ static int update_send_status(ci_request_t * req)
 
         req->pstrblock_responce = req->response_header->buf;
         req->remain_send_block_bytes = req->response_header->bufused;
-        req->status = SEND_RESPHEAD;
+        req->status = SEND_RESPHEAD; // mark by jayg
         ci_debug_printf(9, "Going to send response headers\n");
         return CI_OK;
     }
+
+#if 0
+    if(req->status == SEND_BLOCKED){
+        ci_debug_printf(9, "Going to reset response headers\n");
+        if (!mk_responce_header(req)) {
+            ci_debug_printf(1, "Error constructing the responce headers!\n");
+            return CI_ERROR;
+        }
+        req->responce_hasbody = resp_check_body(req);
+        req->pstrblock_responce = req->response_header->buf;
+        req->remain_send_block_bytes = req->response_header->bufused;
+        req->status = SEND_RESPHEAD; // mark by jayg
+        return CI_OK;
+    }
+#endif
 
     if (req->status == SEND_EOF) {
         //	 ci_debug_printf(9, "The req->status is EOF (remain to send bytes:%d)\n", 
@@ -1189,7 +1170,7 @@ static int get_send_body(ci_request_t * req, int parse_only)
                 }
 
                 if (parse_chunk_ret == CI_EOF)
-                    req->eof_received = 1;
+                    req->eof_received = 1; // mark by jayg
             }
             if (wchunkdata && req->write_to_module_pending)
                 wbytes = req->write_to_module_pending;
@@ -1209,8 +1190,7 @@ static int get_send_body(ci_request_t * req, int parse_only)
                     rchunkisfull = 1;
                     rbytes = 0;
                 }
-            }
-            else
+            }else
                 rbytes = 0;
 
             no_io = 0;
@@ -1271,25 +1251,26 @@ static int get_send_body(ci_request_t * req, int parse_only)
 static int send_remaining_response(ci_request_t * req)
 {
     int ret = 0;
-    int (*service_io) (char *rbuf, int *rlen, char *wbuf, int *wlen, int iseof,
-            ci_request_t *);
+    int (*service_io) (char *rbuf, int *rlen, char *wbuf, int *wlen, int iseof, ci_request_t *);
     service_io = req->current_service_mod->mod_service_io;
 
     if (!service_io)
         return CI_ERROR;
-
 
     if (req->status == SEND_EOF && req->remain_send_block_bytes == 0) {
         ci_debug_printf(5, "OK sending all data\n");
         return CI_OK;
     }
     do {
+
+        /* by jayg */
+        int count = 0;
+        ci_debug_printf("in send_remaining_response %d times\n", ++count); 
+
         while (req->remain_send_block_bytes > 0) {
-            if ((ret =
-                        wait_for_data(req->connection->fd, TIMEOUT,
-                            wait_for_write)) < 0) {
-                ci_debug_printf(3,
-                        "Timeout sending data. Ending .......\n");
+            //wait_for_write
+            if ((ret = wait_for_data(req->connection->fd, TIMEOUT, wait_for_write)) < 0) {
+                ci_debug_printf(3, "Timeout sending data. Ending .......\n");
                 return CI_ERROR;
             }
             if (send_current_block_data(req) == CI_ERROR)
@@ -1551,6 +1532,7 @@ static int do_request_preview(ci_request_t *req)
         return CI_ERROR;
     }
 
+    /* when req->eof_received preview_read_status is CI_EOF by jayg */
     if (preview_read_status != CI_EOF)  {
         ec_responce_simple(req, EC_100);     /*if 100 Continue and not "0;ieof"*/
     }
@@ -1789,6 +1771,7 @@ static int do_request(ci_request_t * req)
 
             /*We have received all data from the client. Call the end-of-data service handler and process*/
             ret_status = do_end_of_data(req);
+            /* mk_responce_header(req); by jayg*/
 #if 0
             srv_echo_flag = ci_get_flag(req);
             ci_debug_printf(9, "\n\n    srv_echo_flag == %d,addr = %p\n\n",srv_echo_flag,&srv_echo_flag);

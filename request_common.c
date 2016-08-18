@@ -114,17 +114,14 @@ void ci_request_t_pack(ci_request_t * req, int is_request)
         elist[2]->start = sizeofencaps(elist[1]) + elist[1]->start;
     }
 
-
     if (elist[0] == NULL) {
         sprintf(buf, "Encapsulated: null-body=0");
-    }
-    else if (elist[2] != NULL) {
+    }else if (elist[2] != NULL) {
         sprintf(buf, "Encapsulated: %s=%d, %s=%d, %s=%d",
                 ci_encaps_entity_string(elist[0]->type), elist[0]->start,
                 ci_encaps_entity_string(elist[1]->type), elist[1]->start,
                 ci_encaps_entity_string(elist[2]->type), elist[2]->start);
-    }
-    else if (elist[1] != NULL) {
+    }else if (elist[1] != NULL) {
         sprintf(buf, "Encapsulated: %s=%d, %s=%d",
                 ci_encaps_entity_string(elist[0]->type), elist[0]->start,
                 ci_encaps_entity_string(elist[1]->type), elist[1]->start);
@@ -524,7 +521,7 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
                     return CI_ERROR; /* To big chunk definition?*/
                 return CI_NEEDS_MORE;
             }
-            eofChunk += 2;
+            eofChunk += 2; 
             chunkLen = eofChunk - req->pstrblock_read;
             // Count parse data
             req->request_bytes_in += (eofChunk - req->pstrblock_read);
@@ -538,10 +535,10 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
                 return CI_ERROR;
             }
             req->current_chunk_len = tmp;
-            ci_debug_printf(9, "req->current_chunk_len is %d\n", req->current_chunk_len);
             req->chunk_bytes_read = 0;
 
             while(*end == ' ' || *end == '\t') ++end; /*ignore spaces*/
+            
             if (req->current_chunk_len == 0) {
                 remains = req->pstrblock_read_len - chunkLen;
                 if (remains < 2) /*missing the \r\n of the 0[; ...]\r\n\r\n of the eof chunk*/
@@ -554,7 +551,7 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
                 chunkLen += 2;
                 req->request_bytes_in += 2; /*count 2 extra chars on parsed data*/
 
-                if (*end == ';') {
+                if(*end == ';') {
                     end++;
                     while(*end == ' ' || *end == '\t') ++end; /*ignore spaces*/
                     remains = req->pstrblock_read_len - (end - req->pstrblock_read);
@@ -567,11 +564,10 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
                     while(*end != '\r') ++end;
                     req->eof_received = 1;
                 }
-            }else {
+            }else{
                 read_status = READ_CHUNK_DATA;
-                /*include the \r\n end of chunk data */
-                req->current_chunk_len += 2;
-            }// end of if-else current_chunk_len 
+                req->current_chunk_len += 2; /*include the \r\n end of chunk data */
+            }// end of if-else current_chunk_len == 0
 
             /*The end pointing after the number and extensions. Should point to \r\n*/
             if (*end != '\r' || *(end + 1) != '\n') {
@@ -581,6 +577,12 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
 
             req->pstrblock_read_len -= chunkLen;
             req->pstrblock_read += chunkLen;
+
+            /* by jayg */
+            ci_debug_printf(9, "req->current_chunk_len is %d\n", req->current_chunk_len);
+            ci_debug_printf(9, "eofChunk is \n%s\n", eofChunk);
+            ci_debug_printf(9, "chunkLen is %d\n", chunkLen);
+
         } // end of if READ_CHUNK_DEF
 
         if (req->current_chunk_len == 0) /*zero chunk received, stop for now*/
@@ -589,28 +591,27 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
         /*if we have data for service leaving this function now */
         if (req->write_to_module_pending)
             return CI_OK;
+
         if (read_status == READ_CHUNK_DATA) {
             if (req->pstrblock_read_len <= 0) {
-                ci_debug_printf(9, "req->pstrblock_len <= 0\n");
+                ci_debug_printf(9, "req->pstrblock_len <= 0\n"); //by jayg
                 return CI_NEEDS_MORE;
             }
-            *wdata = req->pstrblock_read;
-            remains = req->current_chunk_len - req->chunk_bytes_read;
-            if (remains <= req->pstrblock_read_len) {        /*we have all the chunks data */
+            *wdata = req->pstrblock_read; 
+            remains = req->current_chunk_len - req->chunk_bytes_read;  // Include \r\n 
+            if(remains <= req->pstrblock_read_len) {        /*we have all the chunks data */
                 if (remains > 2) {
                     req->write_to_module_pending = remains - 2;
-                    req->http_bytes_in += req->write_to_module_pending;
-                    req->body_bytes_in += req->write_to_module_pending;
-                } 
-                else        /*we are in all or part of the \r\n end of chunk data */
+                    req->http_bytes_in += req->write_to_module_pending; // second 
+                    req->body_bytes_in += req->write_to_module_pending; // first
+                }else        /*we are in all or part of the \r\n end of chunk data */
                     req->write_to_module_pending = 0;
 
                 req->chunk_bytes_read += remains;
                 req->pstrblock_read += remains;
                 req->pstrblock_read_len -= remains;
                 req->request_bytes_in += remains; //append parsed data
-            }
-            else {
+            }else {
                 tmp = remains - req->pstrblock_read_len;
                 if (tmp < 2) {
                     req->write_to_module_pending =
@@ -627,7 +628,8 @@ int parse_chunk_data(ci_request_t * req, char **wdata)
                 req->pstrblock_read += req->pstrblock_read_len;
                 req->pstrblock_read_len -= req->pstrblock_read_len;
             }
-        }
+        } // end of if-else READ_CHUNK_DATA
+
         if (req->pstrblock_read_len == 0)
             return CI_NEEDS_MORE;
     } // end of while 1
@@ -649,6 +651,7 @@ int net_data_read(ci_request_t * req)
 
         /* ci_debug_printf(9, "===================here 2\n"); */
         req->pstrblock_read = req->rbuf;
+        /* ci_debug_printf(9, "1.req->pstrblock_read_len is %d\n", req->pstrblock_read_len); */
     }
 
     bytes = BUFSIZE - req->pstrblock_read_len;
@@ -663,7 +666,7 @@ int net_data_read(ci_request_t * req)
     }
     /* ci_debug_printf(9, "=============================rbuf is \n%s\n", req->rbuf); */
     req->pstrblock_read_len += bytes;  /* ... (size of data is readed plus old )... */
-    ci_debug_printf(9, "req->pstrblock_read_len is %d\n", req->pstrblock_read_len);
+    ci_debug_printf(9, "2.req->pstrblock_read_len is %d\n", req->pstrblock_read_len);
     
     req->bytes_in += bytes;
     return CI_OK;

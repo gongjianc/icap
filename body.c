@@ -745,7 +745,7 @@ int ci_simple_file_write(ci_simple_file_t * body, const char *buf, int len, int 
 
     if (iseof && ret == len) {
         body->flags |= CI_FILE_HAS_EOF;
-        ci_debug_printf(9, "Body data size=%" PRINTF_OFF_T "\n ",
+        ci_debug_printf(9, "Body data size=%" PRINTF_OFF_T "\n",
                 (CAST_OFF_T) body->endpos);
     }
 
