@@ -187,8 +187,7 @@ ci_encaps_entity_t *ci_request_alloc_entity(ci_request_t * req, int type, int va
         req->trash_entities[type] = NULL;
         e->type = type;
         e->start = val;
-        if (e->type == ICAP_REQ_HDR
-                || e->type == ICAP_RES_HDR) {
+        if (e->type == ICAP_REQ_HDR || e->type == ICAP_RES_HDR) {
             if (e->entity)
                 ci_headers_reset((ci_headers_list_t *)e->entity);
         }

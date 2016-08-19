@@ -800,7 +800,7 @@ ICAP_AUTHORIZATION	include/header.h	/^enum ci_request_headers { ICAP_AUTHORIZATI
 ICAP_EOF	include/c-icap.h	164;"	d
 ICAP_EOL	include/c-icap.h	163;"	d
 ICAP_FROM	include/header.h	/^                       ICAP_FROM, ICAP_HOST, ICAP_REFERER,$/;"	e	enum:ci_request_headers
-ICAP_HEADER_READSIZE	request.c	326;"	d	file:
+ICAP_HEADER_READSIZE	request.c	292;"	d	file:
 ICAP_HOST	include/header.h	/^                       ICAP_FROM, ICAP_HOST, ICAP_REFERER,$/;"	e	enum:ci_request_headers
 ICAP_IEOF	include/c-icap.h	165;"	d
 ICAP_NULL_BODY	include/header.h	/^			       ICAP_NULL_BODY,ICAP_OPT_BODY };$/;"	e	enum:ci_encapsulated_entities
@@ -1493,15 +1493,15 @@ SED	services/ex-206/Makefile	/^SED = \/bin\/sed$/;"	m
 SED	tests/Makefile	/^SED = \/bin\/sed$/;"	m
 SED	utils/Makefile	/^SED = \/bin\/sed$/;"	m
 SEMKEY	os/unix/proc_mutex.c	33;"	d	file:
-SENDDATA_STATUS	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_EOF, SEND_BLOCKED}; \/\/add block by jayg$/;"	g
-SEND_BLOCKED	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_EOF, SEND_BLOCKED}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
-SEND_BODY	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_EOF, SEND_BLOCKED}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
-SEND_EOF	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_EOF, SEND_BLOCKED}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
-SEND_HEAD1	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_EOF, SEND_BLOCKED}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
-SEND_HEAD2	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_EOF, SEND_BLOCKED}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
-SEND_HEAD3	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_EOF, SEND_BLOCKED}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
-SEND_NOTHING	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_EOF, SEND_BLOCKED}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
-SEND_RESPHEAD	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_EOF, SEND_BLOCKED}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
+SENDDATA_STATUS	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_BLOCKED, SEND_EOF, \/*SEND_BLOCKED*\/}; \/\/add block by jayg$/;"	g
+SEND_BLOCKED	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_BLOCKED, SEND_EOF, \/*SEND_BLOCKED*\/}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
+SEND_BODY	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_BLOCKED, SEND_EOF, \/*SEND_BLOCKED*\/}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
+SEND_EOF	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_BLOCKED, SEND_EOF, \/*SEND_BLOCKED*\/}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
+SEND_HEAD1	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_BLOCKED, SEND_EOF, \/*SEND_BLOCKED*\/}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
+SEND_HEAD2	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_BLOCKED, SEND_EOF, \/*SEND_BLOCKED*\/}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
+SEND_HEAD3	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_BLOCKED, SEND_EOF, \/*SEND_BLOCKED*\/}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
+SEND_NOTHING	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_BLOCKED, SEND_EOF, \/*SEND_BLOCKED*\/}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
+SEND_RESPHEAD	include/request.h	/^enum SENDDATA_STATUS {SEND_NOTHING=0, SEND_RESPHEAD, SEND_HEAD1, SEND_HEAD2, SEND_HEAD3, SEND_BODY, SEND_BLOCKED, SEND_EOF, \/*SEND_BLOCKED*\/}; \/\/add block by jayg$/;"	e	enum:SENDDATA_STATUS
 SERIAL_ALLOC	include/mem.h	/^enum allocator_types {OS_ALLOC, SERIAL_ALLOC, POOL_ALLOC, PACK_ALLOC};$/;"	e	enum:allocator_types
 SERVDIR	c_icap.mak	/^SERVDIR="c:\\\\c-icap\\\\lib"$/;"	m
 SERVER_ADMIN	include/cfg_param.h	/^     char *SERVER_ADMIN;$/;"	m	struct:ci_server_conf	access:public
@@ -4246,7 +4246,7 @@ eof	services/srv_echo-insert.c	/^	int eof;$/;"	m	struct:echo_req_data	file:	acce
 eof_received	include/request.h	/^     int eof_received;$/;"	m	struct:ci_request	access:public
 eof_str	request.c	/^const char *eof_str = "0\\r\\n\\r\\n";$/;"	v
 eof_str	request_common.c	/^static const char *eof_str = "0\\r\\n\\r\\n";$/;"	v	file:
-eoh	header.c	421;"	d	file:
+eoh	header.c	424;"	d	file:
 eol_str	request.c	/^const char *eol_str = "\\r\\n";$/;"	v
 equal	include/types_ops.h	/^    int (*equal)(const void *ref_key,const void *check_key);$/;"	m	struct:ci_type_ops	access:public
 error_page	services/echo/srv_echo.c	/^    ci_membuf_t *error_page;$/;"	m	struct:echo_req_data	file:	access:public
@@ -4854,7 +4854,7 @@ hash_table_search	lookup_file_table.c	/^void *hash_table_search(struct ci_lookup
 hash_table_size	cache.c	/^    unsigned int hash_table_size;$/;"	m	struct:ci_local_cache_data	file:	access:public
 hash_table_size	include/hash.h	/^    unsigned int hash_table_size;$/;"	m	struct:ci_hash_table	access:public
 hash_table_type	lookup_file_table.c	/^struct ci_lookup_table_type hash_table_type={$/;"	v	typeref:struct:ci_lookup_table_type
-header_end	simple_api.c	257;"	d	file:
+header_end	simple_api.c	269;"	d	file:
 headers	include/header.h	/^     char **headers;$/;"	m	struct:ci_headers_list	access:public
 heads	include/header.h	/^CI_DECLARE_FUNC(int)  ci_headers_unpack(ci_headers_list_t *heads);$/;"	v
 heads	include/header.h	/^CI_DECLARE_FUNC(int)  sizeofheader(ci_headers_list_t *heads);$/;"	v
@@ -5506,6 +5506,7 @@ method	services/srv_echo-insert.c	/^	char method[MAX_METHOD_SIZE];$/;"	m	struct:
 method_str	utils/c-icap-client.c	/^char *method_str = "GET";$/;"	v
 methods_authenticators	module.c	/^int methods_authenticators(struct auth_hash *hash, const char *method_name,$/;"	f	signature:(struct auth_hash *hash, const char *method_name, int method_id, const char **argv)
 min	body.c	41;"	d	file:
+mk_blocked_responce_header	request.c	/^static int mk_blocked_responce_header(ci_request_t * req)$/;"	f	file:	signature:(ci_request_t * req)
 mk_encaps_entity	header.c	/^ci_encaps_entity_t *mk_encaps_entity(int type, int val)$/;"	f	signature:(int type, int val)
 mk_responce_header	request.c	/^static int mk_responce_header(ci_request_t * req)$/;"	f	file:	signature:(ci_request_t * req)
 mkdir_p	Makefile	/^mkdir_p = $(MKDIR_P)$/;"	m

@@ -54,8 +54,10 @@ ci_headers_list_t *ci_http_request_headers(ci_request_t * req)
 {
      ci_encaps_entity_t **e_list;
      e_list = req->entities;
-     if (e_list[0] != NULL && e_list[0]->type == ICAP_REQ_HDR)  /*It is always the first ellement */
+     if (e_list[0] != NULL && e_list[0]->type == ICAP_REQ_HDR){  /*It is always the first ellement */
+         /* ci_debug_printf(9, "get the first element\n"); */
           return (ci_headers_list_t *) e_list[0]->entity;
+     }
 
      /*We did not found the request headers but maybe there are in req->trash objects
        Trying to retrieve hoping that it were not desstroyed yet
@@ -83,6 +85,12 @@ int ci_http_request_reset_headers(ci_request_t * req)
      if (!(heads = ci_http_request_headers(req)))
           return 0;
      ci_headers_reset(heads);
+     
+     /* //by jayg
+    if(heads->packed)
+         ci_debug_printf(9, "Wow, still packed\n");
+    ci_debug_printf(9, "unpacked\n"); */
+
      return 1;
 }
 
@@ -153,10 +161,14 @@ const char *ci_http_response_add_header(ci_request_t * req, const char *header)
 const char *ci_http_request_add_header(ci_request_t * req, const char *header)
 {
      ci_headers_list_t *heads;
-     if(req->packed)   /*Not in edit mode*/
-	  return NULL;
+     if(req->packed){   /*Not in edit mode*/
+         /* ci_debug_printf(9, "so you are packed\n"); */
+         return NULL;
+     }
+     /* ci_debug_printf(9, "ci_http_request_add_header 1\n"); */
      if (!(heads = ci_http_request_headers(req)))
           return NULL;
+     /* ci_debug_printf(9, "ci_http_request_add_header 2\n"); */
      return ci_headers_add(heads, header);
 }
 

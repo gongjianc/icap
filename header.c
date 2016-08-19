@@ -226,6 +226,8 @@ const char *ci_headers_add(ci_headers_list_t * h, const char *line)
 	  return NULL;
      }
 
+     /* ci_debug_printf(9, "ci_headers_add step 1\n"); */
+
      if (h->used == h->size) {
           len = h->size + HEADERSTARTSIZE;
           newspace = realloc(h->headers, len * sizeof(char *)); 
@@ -253,13 +255,14 @@ const char *ci_headers_add(ci_headers_list_t * h, const char *line)
           for (i = 1; i < h->used; i++)
                h->headers[i] = h->headers[i - 1] + strlen(h->headers[i - 1]) + 2;
      }
-     newhead = h->buf + h->bufused; // pointer copy 
+     newhead = h->buf + h->bufused; // mark by jayg
      strcpy(newhead, line);
      h->bufused += linelen + 2; //2 char size for \r\n at the end of each header 
      *(newhead + linelen + 1) = '\n';
      *(newhead + linelen + 3) = '\n';
      if (newhead)
           h->headers[h->used++] = newhead;
+     /* ci_debug_printf(9, "ci_headers_add step 2\n"); */
 
      return newhead;
 }

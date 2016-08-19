@@ -191,7 +191,7 @@ static int wait_for_data(ci_socket fd, int secs, int what_wait)
 
     do {
         //secs = TIMEOUT
-        wait_status =ci_wait_for_data(fd, secs, what_wait);
+        wait_status = ci_wait_for_data(fd, secs, what_wait);
         if (wait_status < 0)
             return CI_ERROR;
         if (wait_status == 0 && CHILD_HALT) /*abort*/
@@ -907,13 +907,82 @@ static int mk_responce_header(ci_request_t * req)
     return 1;
 }
 
+static int mk_blocked_responce_header(ci_request_t * req)
+{
+    ci_headers_list_t *head;
+    ci_encaps_entity_t **e_list;
+    ci_service_xdata_t *srv_xdata;
+    char buf[512];
+    srv_xdata = service_data(req->current_service_mod);
+    ci_headers_reset(req->response_header);
+    head = req->response_header; // response
+    assert(req->return_code >= EC_100 && req->return_code < EC_MAX);
+    //512 bytes
+    snprintf(buf, 512, "ICAP/1.0 %d %s", ci_error_code(req->return_code), ci_error_code_string(req->return_code));
+    ci_headers_add(head, buf);
+    ci_headers_add(head, "Server: C-ICAP/" VERSION);
+    if (req->keepalive)
+        ci_headers_add(head, "Connection: keep-alive");
+    else
+        ci_headers_add(head, "Connection: close");
+    ci_service_data_read_lock(srv_xdata);
+    ci_headers_add(head, srv_xdata->ISTag);
+    ci_service_data_read_unlock(srv_xdata);
+    if (!ci_headers_is_empty(req->xheaders)) {
+        ci_headers_addheaders(head, req->xheaders);
+    }
+
+    //for ICAP_RESPMOD
+    e_list = req->entities;
+    if (req->type == ICAP_RESPMOD) {
+        if (e_list[0]->type == ICAP_REQ_HDR) {
+            ci_request_release_entity(req, 0);
+            e_list[0] = e_list[1];
+            e_list[1] = e_list[2];
+            e_list[2] = NULL;
+        }
+    }
+
+    snprintf(buf, 512, "Via: ICAP/1.0 %s (C-ICAP/" VERSION " %s )",
+            MY_HOSTNAME,
+            (req->current_service_mod->mod_short_descr ? req->
+             current_service_mod->mod_short_descr : req->current_service_mod->
+             mod_name));
+    buf[511] = '\0';
+    /*Here we must append it to an existsing Via header not just add a new header */
+    if (req->type == ICAP_RESPMOD) {
+        ci_http_response_add_header(req, buf);
+    }
+    else if (req->type == ICAP_REQMOD) {
+        ci_http_request_add_header(req, buf);
+    }
+
+    if(req->status == SEND_BLOCKED){
+        if(!ci_request_release_entity(req, 1)){
+            ci_debug_printf(9, "fail to release blocked body");
+            return 0;
+        }
+        
+        ci_headers_list_t *head = (ci_headers_list_t *)req->entities[0]->entity;
+        ci_debug_printf(9, "head->buf is \n%s\n", head->buf);
+        for(int i = 0; i < head->used; i++)
+            ci_debug_printf(9, "head->headers[%d] is \n%s\n", i, head->headers[i]);
+        int val = head->bufused;
+        ci_debug_printf(9, "val is %d\n", val);
+        req->entities[1] = ci_request_alloc_entity(req, ICAP_NULL_BODY, val);
+        req->responce_hasbody = 0;
+        ci_debug_printf(9, "req has body, but blocked!\n");
+    }
+
+    ci_response_pack(req);
+    return 1;
+}
 
 /****************************************************************/
 /* New  functions to send responce */
 
 const char *eol_str = "\r\n";
 const char *eof_str = "0\r\n\r\n";
-
 
 static int send_current_block_data(ci_request_t * req)
 {
@@ -924,7 +993,6 @@ static int send_current_block_data(ci_request_t * req)
         ci_debug_printf(5, "Error writing to socket (errno:%d, bytes:%d. string:\"%s\")", errno, req->remain_send_block_bytes, req->pstrblock_responce);
         return CI_ERROR;
     }
-
     if (bytes == 0) {
         ci_debug_printf(5, "Can not write to the client. Is the connection closed?");
         return CI_ERROR;
@@ -1015,7 +1083,6 @@ static int update_send_status(ci_request_t * req)
             return CI_ERROR;
         }
         req->responce_hasbody = resp_check_body(req);
-
         req->pstrblock_responce = req->response_header->buf;
         req->remain_send_block_bytes = req->response_header->bufused;
         req->status = SEND_RESPHEAD; // mark by jayg
@@ -1052,27 +1119,22 @@ static int update_send_status(ci_request_t * req)
     }
 
     if ((status = req->status) < SEND_HEAD3) {
+        ci_debug_printf(9, "req->status is less than SEND_HEAD3\n"); // by jayg
         status++;
     }
 
     if (status > SEND_RESPHEAD && status < SEND_BODY) {        /*status is SEND_HEAD1 SEND_HEAD2 or SEND_HEAD3    */
         i = status - SEND_HEAD1;      /*We have to send next headers block .... */
-        if ((e = req->entities[i]) != NULL
-                && (e->type == ICAP_REQ_HDR || e->type == ICAP_RES_HDR)) {
-
+        if ((e = req->entities[i]) != NULL && (e->type == ICAP_REQ_HDR || e->type == ICAP_RES_HDR)) {
             req->pstrblock_responce = ((ci_headers_list_t *) e->entity)->buf;
-            req->remain_send_block_bytes =
-                ((ci_headers_list_t *) e->entity)->bufused;
-
+            req->remain_send_block_bytes = ((ci_headers_list_t *) e->entity)->bufused;
             req->status = status;
             ci_debug_printf(9, "Going to send http headers on entity :%d\n", i);
             return CI_OK;
-        }
-        else if (req->responce_hasbody) {     /*end of headers, going to send body now.A body always follows the res_hdr or req_hdr..... */
+        }else if (req->responce_hasbody) {     /*end of headers, going to send body now.A body always follows the res_hdr or req_hdr..... */
             req->status = SEND_BODY;
             return CI_OK;
-        }
-        else {
+        }else {
             req->status = SEND_EOF;
             req->pstrblock_responce = (char *) NULL;
             req->remain_send_block_bytes = 0;
@@ -1262,10 +1324,9 @@ static int send_remaining_response(ci_request_t * req)
         return CI_OK;
     }
     do {
-
-        /* by jayg */
+        /* [>by jayg<]
         int count = 0;
-        ci_debug_printf("in send_remaining_response %d times\n", ++count); 
+        ci_debug_printf(9, "in send_remaining_response %d times\n", ++count);  */
 
         while (req->remain_send_block_bytes > 0) {
             //wait_for_write
@@ -1273,6 +1334,19 @@ static int send_remaining_response(ci_request_t * req)
                 ci_debug_printf(3, "Timeout sending data. Ending .......\n");
                 return CI_ERROR;
             }
+
+            //add by jayg
+            if(req->status == SEND_BLOCKED){
+                ci_debug_printf(9, "get SEND_BLOCKED status\n");
+                if(mk_blocked_responce_header(req)){
+                    ci_debug_printf(9, "mk_blocked_responce_header success\n");
+                    req->status = SEND_RESPHEAD;
+                }else{
+                    ci_debug_printf(9, "mk_blocked_responce_header error\n");
+                    return CI_ERROR;
+                }
+            }
+
             if (send_current_block_data(req) == CI_ERROR)
                 return CI_ERROR;
         }
